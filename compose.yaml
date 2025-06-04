@@ -16,6 +16,26 @@ services:
       - "prometheus.job=app"
       - "prometheus.port=8080"
       - "prometheus.path=/metrics"
+      
+  # Using mac_exporter instead of node_exporter for macOS compatibility
+  mac_exporter:
+    image: linuxserver/netdata:latest
+    container_name: mac_exporter
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - 19999:19999
+    labels:
+      - "prometheus.enable=true"
+      - "prometheus.job=mac-exporter"
+      - "prometheus.port=19999"
+      - "prometheus.path=/api/v1/allmetrics?format=prometheus"
 
   prometheus:
     image: prom/prometheus:v2.45.0

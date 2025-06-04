@@ -26,3 +26,12 @@ scrape_configs:
         target_label: container
       - source_labels: [__meta_docker_container_ip]
         target_label: instance
+        
+  # Static configuration for macOS monitoring using netdata
+  - job_name: 'mac-metrics'
+    static_configs:
+      - targets: ['mac_exporter:19999']
+    metrics_path: /api/v1/allmetrics
+    params:
+      format: [prometheus]
+    honor_labels: true

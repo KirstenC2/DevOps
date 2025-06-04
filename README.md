@@ -138,3 +138,71 @@ For production environments, consider:
 - Implementing proper authentication
 - Setting up high availability for Prometheus
 - Configuring retention policies
+
+## Sample Dashboards
+
+### System Monitoring Dashboard
+
+A sample system monitoring dashboard has been included in this project. It provides visualizations for:
+
+- CPU Usage
+- Memory Usage
+- Network Traffic
+- Disk Usage
+
+This dashboard will be automatically loaded when you start Grafana. You can access it by navigating to the Dashboards section in the Grafana UI.
+
+### macOS Monitoring Dashboard
+
+A dedicated macOS monitoring dashboard is also included, which provides detailed metrics specific to macOS systems:
+
+- macOS CPU Usage
+- macOS Memory Usage
+- macOS Disk Usage
+- macOS Network Traffic
+- macOS System Load
+- macOS Disk I/O
+
+This dashboard leverages the Node Exporter to collect system metrics from your macOS host.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Port conflicts**: If you encounter port conflicts, modify the port mappings in the `compose.yaml` file.
+
+   ```yaml
+   ports:
+     - 3002:3000  # Change 3001 to 3002 if 3001 is already in use
+   ```
+
+2. **Permission issues**: If you encounter permission issues with Docker volumes, ensure that the directories have the correct permissions.
+
+   ```bash
+   chmod -R 777 ./prometheus
+   chmod -R 777 ./grafana
+   ```
+
+3. **Prometheus not scraping metrics**: Check the Prometheus targets page at http://localhost:9090/targets to see if all targets are being scraped successfully.
+
+4. **Grafana not showing data**: Verify that the Prometheus data source is correctly configured in Grafana and that Prometheus is successfully collecting metrics.
+
+### Viewing Logs
+
+To view logs for troubleshooting:
+
+```bash
+# View logs for all services
+docker compose logs
+
+# View logs for a specific service
+docker compose logs prometheus
+docker compose logs grafana
+```
+
+## Further Resources
+
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
+- [Grafana Documentation](https://grafana.com/docs/)
+- [PromQL Query Examples](https://prometheus.io/docs/prometheus/latest/querying/examples/)
+- [Grafana Dashboard Examples](https://grafana.com/grafana/dashboards/)
