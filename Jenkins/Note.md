@@ -37,6 +37,48 @@
 - 建立雲端資源，初始化環境
 - 和團隊share可以reuse的deploy流程
 
+## Jenkins 架構
+
+```
++-----------------------------+
+|        Jenkins Master       |
+|-----------------------------|
+|  - Web UI                   |
+|  - Job Scheduler            |
+|  - Build Queue              |
+|  - Plugin System            |
+|  - Pipeline Engine          |
++-----------------------------+
+             |
+             | Agent connection (SSH, JNLP)
+             ↓
++-----------------------------+
+|        Jenkins Agent        |
+|-----------------------------|
+|  - Executes builds          |
+|  - Provides OS-specific env |
++-----------------------------+
+
+```
+
+
+## Jenkins的核心組件
+| 元件名稱                      | 說明                           |
+| ------------------------- | ---------------------------- |
+| **Master / Controller**   | core system、管理 UI、排程、外掛等            |
+| **Agent / Worker / Node** | 實際execute Build 的主機，load balance          |
+| **Executor**              | 每個 Agent 可有多個執行緒處理工作         |
+| **Job / Project**         | Jenkins 的單位任務，可包含各種 Pipeline |
+| **Pipeline Engine**       | 解析並執行 Jenkinsfile 的引擎        |
+| **Workspace**             | Jenkins 執行 Job 時會建立的目錄，暫存資料  |
+
+## Jenkins的運作說明
+1. developer push code to GitHub branch
+2. Jenkins 收到了Webhook或定時trigger
+3. Jenkins Controller把Job 放進Queue
+4. 然後可以用的Agent就會去抓任務執行
+5. Agent在workspace裡面執行shell/script/docker 的command
+6. Jenkins回覆執行結果然後save artifact/log/report等等
 
 ## Stage 1: CI basics & Jenkins Pipeline 建立
 ### 目的
@@ -113,8 +155,63 @@ pipeline {
     failure { echo 'Something went wrong!' }
   }
 }
+```
+### 範例3: Nodejs with env
+```
+pipeline {
+  agent any
+
+  environment {
+    NODE_ENV = "production"
+    APP_NAME = "myapp"
+    BUILD_DIR = "dist"
+  }
+
+  stages {
+    stage('Print Env') {
+      steps {
+        sh '''
+          echo "Environment: $NODE_ENV"
+          echo "App: $APP_NAME"
+          echo "Build directory: $BUILD_DIR"
+        '''
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh '''
+          npm install
+          npm run build
+          echo "Build output stored in $BUILD_DIR"
+        '''
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sh '''
+          echo "Deploying $APP_NAME to production server..."
+          scp -r $BUILD_DIR user@your-server:/var/www/$APP_NAME
+        '''
+      }
+    }
+  }
+}
 
 ```
+說明：
+| 區塊                      | 說明                     |
+| ----------------------- | ---------------------- |
+| `environment {}`        | 宣告全 pipeline 可用的變數     |
+| `$NODE_ENV`、`$APP_NAME` | 在 `sh` 內可直接用 `$變數名` 存取 |
+| `sh ''' ... '''`        | 可以寫多行指令，而且支援使用 `$VAR`  |
+
+一般來說， 他們的用途為
+- 切換不同部署環境（如 NODE_ENV=staging）
+- 版本號或 commit SHA（如 BUILD_TAG=1.2.3）
+- API key、Token（建議搭配 withCredentials）
+
 
 ## Stages 說明
 這邊的Jenkins的pipeline用上的stages說明
